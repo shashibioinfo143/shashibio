@@ -1,0 +1,25 @@
+# Generate a pileup file from the normal BAM
+samtools mpileup -f path/to/GRCh38.fa normalsample.bam > normalsample.pileup
+
+# Extract variant information and calculate VAF
+awk '{
+    if ($4 > 10) {  # Only consider positions with coverage > 10
+        split($5, bases, ",");  # Split base calls
+        ref_count = gsub(/[.,]/, "", $5);  # Count reference bases
+        alt_count = length(bases) - ref_count;  # Count alternate bases
+        vaf = alt_count / $4;  # Calculate VAF
+        print vaf;
+    }
+}' normalsample.pileup > vaf_list.txt
+
+# Calculate the median VAF
+sort -n vaf_list.txt | awk '{
+    a[NR] = $1;
+}
+END {
+    if (NR % 2) {
+        print a[(NR + 1) / 2];  # Median for odd number of values
+    } else {
+        print (a[NR / 2] + a[(NR / 2) + 1]) / 2;  # Median for even number of values
+    }
+}'
