@@ -1,0 +1,1 @@
+gsutil -m cp -r gs://BucketA/P21 gs://BucketB/P21
